@@ -78,3 +78,13 @@ jobs:
         run: echo "${{ needs.model-build.outputs.model-hyperparameters }}"
       - name: Deploy Model
         run: echo "Deploy Model to AWS"
+
+  error-report:
+    if: failure()
+    needs: model-deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Output Information
+        run: |
+          echo "There was an error in the Workflow"
+          echo "${{ toJSON(github) }}"
