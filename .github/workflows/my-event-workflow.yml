@@ -1,9 +1,10 @@
 name: My Event Workflow
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
       - "master"
-      - "main"
     paths:
       - "**.py"
 jobs:
