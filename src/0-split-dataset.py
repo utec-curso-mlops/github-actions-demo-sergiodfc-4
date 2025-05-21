@@ -2,6 +2,7 @@ import pandas as pd
 import fire
 import os
 
+#Comentario de prueba para validar ejecución con event-filter por path
 
 def split_data(df_data, perc_data_train):
     df_data_train = df_data.sample(frac=perc_data_train)
