@@ -1,0 +1,90 @@
+name: Conditional CI CD Workflow for model
+on:
+  push:
+    branches:
+      - 'master'
+jobs:
+  model-build:
+    runs-on: ubuntu-latest
+    outputs:
+      model-hyperparameters: ${{ steps.publish-output.outputs.model-hyperparameters }}
+    steps:
+      - name: Get Code
+        uses: actions/checkout@v4
+      - name: Python Setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+      - name: Install Python Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Split Dataset
+        run: python src/0-split-dataset.py
+      - name: Preprocess Dataset Train
+        run: python src/1-preprocess-dataset-train.py
+      - name: Prepare Dataset Test
+        run: python src/2-prepare-dataset-test.py
+      - name: Train Evaluate Model
+        run: python src/3-train-evaluate-models.py
+      - name: Select Best Model
+        run: python src/4-select-best-model.py
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: best-model-files
+          path: |
+            outputs/preprocess/
+            outputs/train/metrics/
+            outputs/train/feature_importance.csv
+            outputs/train/models/best_model.pickle
+
+      - name : Install Dependency Bash Tools
+        run: sudo apt-get install csvtool
+      - name: Publish Output Model Hyperparameters
+        id: publish-output
+        run: |          
+          temp_var=$(csvtool format '%(1)\n' outputs/train/metrics/train_cv_model_results_best_model.csv | csvtool -u TAB drop 1 - )
+          echo $temp_var
+          echo "model-hyperparameters=$temp_var" >> $GITHUB_OUTPUT
+
+      - name: Run Model Test
+        continue-on-error: true
+        id: model-test
+        run: python src/5-score-model.py
+      - name: Print error report
+        run: |
+          echo "There was an error in testing Job"
+          echo "Step outcome: ${{ steps.model-test.outcome }}"
+          echo "Step conclusion: ${{ steps.model-test.conclusion }}"
+
+  model-deployment:
+    needs: model-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: best-model-files
+      - name: Output Artifact Content
+        run: |
+          ls
+          echo "preprocess folder context"
+          cd preprocess
+          ls
+      - name: Output Model Hiperparameters
+        run: echo "${{ needs.model-build.outputs.model-hyperparameters }}"
+      - name: Deploy Model
+        run: echo "Deploy Model to AWS"
+
+  error-report:
+    if: failure()
+    needs: model-deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Output Information
+        run: |
+          echo "There was an error in the Workflow"
+          echo "${{ toJSON(github) }}"
