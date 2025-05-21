@@ -4,6 +4,8 @@ on:
     branches:
       - "master"
       - "main"
+    paths:
+      - "**.py"
 jobs:
   model-ci:
     runs-on: ubuntu-latest
