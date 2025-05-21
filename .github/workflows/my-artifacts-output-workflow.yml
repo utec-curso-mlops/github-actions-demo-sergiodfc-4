@@ -1,0 +1,47 @@
+name: CI CD Workflow for model
+on:
+  push:
+    branches:
+      - 'master'
+jobs:
+  model-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Code
+        uses: actions/checkout@v4
+      - name: Python Setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+      - name: Install Python Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Split Dataset
+        run: python src/0-split-dataset.py
+      - name: Preprocess Dataset Train
+        run: python src/1-preprocess-dataset-train.py
+      - name: Prepare Dataset Test
+        run: python src/2-prepare-dataset-test.py
+      - name: Train Evaluate Model
+        run: python src/3-train-evaluate-models.py
+      - name: Select Best Model
+        run: python src/4-select-best-model.py
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: best-model-files
+          path: |
+            outputs/preprocess/
+            outputs/train/metrics/
+            outputs/train/feature_importance.csv
+            outputs/train/models/best_model.pickle
+
+  model-deployment:
+    needs: model-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy Model
+        run: echo "Deploy Model to AWS"

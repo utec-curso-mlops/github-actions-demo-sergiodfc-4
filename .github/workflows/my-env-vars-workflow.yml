@@ -1,8 +1,5 @@
 name: My Env Vars Workflow
-on:
-  push:
-    branches:
-      - 'master'
+on: workflow_dispatch
 env:
   DB_NAME: db-name
 jobs:
