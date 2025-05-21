@@ -1,0 +1,30 @@
+name: My Env Vars Workflow
+on:
+  push:
+    branches:
+      - 'master'
+env:
+  DB_NAME: db-name
+jobs:
+  model-ci:
+    env:
+      DB_ADDRESS: my.database.address
+      DB_USERNAME: username
+      DB_PASSWORD: password
+      DB_PORT: 8080
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Model
+        run: echo "Build Model in CI Pipeline"
+      - name: Connect to Database
+        run: |
+          echo "Connecting to Database $DB_NAME:$PORT at server $DB_ADDRESS"
+          echo "DB_USERNAME: ${{ env.DB_USERNAME }}"
+          echo "DB_PASSWORD: ${{ env.DB_PASSWORD }}"
+
+  model-cd:
+    needs: model-ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy Model
+        run: echo "Deploy Model in CD Pipeline"
