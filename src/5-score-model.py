@@ -46,7 +46,7 @@ class ScoreModel:
 def process_score_model():
     if (os.getcwd().endswith("src")):
         os.chdir("..")
-    df_data_score = pd.read_csv("data/out/application_data_test_prepared.csv")
+    df_data_score = pd.read_csv("data/out/application_data_test_prepared---z.csv")
     score_model_instance = ScoreModel(output_path_train="outputs/train", output_path_preprocess="outputs/preprocess")
     df_data_score_pred, y_pred = score_model_instance.score_preprocess_model(df_data_score)
 
