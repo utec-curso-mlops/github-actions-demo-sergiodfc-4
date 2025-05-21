@@ -9,8 +9,8 @@ jobs:
   model-ci:
     env:
       DB_ADDRESS: my.database.address
-      DB_USERNAME: username
-      DB_PASSWORD: password
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_PORT: 8080
     runs-on: ubuntu-latest
     steps:
