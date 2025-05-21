@@ -1,5 +1,8 @@
-name: CI CD Workflow for model
-on: workflow_dispatch
+name: Conditional CI CD Workflow for model
+on:
+  push:
+    branches:
+      - 'master'
 jobs:
   model-build:
     runs-on: ubuntu-latest
@@ -46,6 +49,16 @@ jobs:
           temp_var=$(csvtool format '%(1)\n' outputs/train/metrics/train_cv_model_results_best_model.csv | csvtool -u TAB drop 1 - )
           echo $temp_var
           echo "model-hyperparameters=$temp_var" >> $GITHUB_OUTPUT
+
+      - name: Run Model Test
+        id: model-test
+        run: python src/5-score-model.py
+      - name: Print error report
+        if: failure() && steps.model-test.outcome == 'failure'
+        run: |
+          echo "There was an error in testing Job"
+          echo "Step outcome: ${{ steps.model-test.outcome }}"
+          echo "Step conclusion: ${{ steps.model-test.conclusion }}"
 
   model-deployment:
     needs: model-build
